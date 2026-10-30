@@ -1,0 +1,4 @@
+date,description,amount,currency,supplier,reference
+2026-02-10,Office equipment invoice,425.50,USD,Northwind Office,DEMO-CSV-001
+2026-02-11,Monthly software subscription,89.99,USD,Contoso Software,DEMO-CSV-002
+2026-02-12,Invalid row test,not-a-number,USD,Example Vendor,DEMO-CSV-003
