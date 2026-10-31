@@ -9,16 +9,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import ai
 from app.config import settings
 from app.database import connection, initialize
-from app.schemas import ReviewRequest
+from app.schemas import Explanation, Finding, Health, Review, ReviewRequest, Summary, TransactionPage, UploadResult
 
-app = FastAPI(title="FINTECH AI API", version="0.3.0", description="Digital Surfers financial audit API")
+app = FastAPI(
+    title="FINTECH AI API", version="0.4.0",
+    description="CSV import, deterministic duplicate screening, optional local/cloud Gemma explanations and human review. See docs/INTEGRATION.md in the source repository. MVP: not a fraud determination service.",
+    license_info={"name": "MIT", "url": "https://opensource.org/licenses/MIT"},
+)
 app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 @app.on_event("startup")
 def startup() -> None:
     initialize()
 
-@app.get("/api/health", tags=["system"])
+@app.get("/api/health", tags=["system"], response_model=Health, operation_id="getHealth")
 def health() -> dict:
     return {"status": "ok", "service": "fintech-ai-backend", "database": "configured"}
 
@@ -34,7 +38,8 @@ def canonical_row(row: dict[str, str]) -> dict[str, str]:
     }
     return {key: next((normalized[a] for a in names if normalized.get(a)), "") for key, names in aliases.items()}
 
-@app.post("/api/upload", tags=["transactions"])
+@app.post("/api/upload", tags=["transactions"], response_model=UploadResult, operation_id="uploadTransactions",
+          responses={413: {"description": "CSV exceeds 10 MB"}, 415: {"description": "Not a CSV filename"}, 422: {"description": "Invalid encoding, columns, or no accepted rows"}})
 async def upload(file: UploadFile = File(...)) -> dict:
     if not file.filename or not file.filename.lower().endswith(".csv"):
         raise HTTPException(415, "Upload a .csv file")
@@ -88,7 +93,7 @@ async def upload(file: UploadFile = File(...)) -> dict:
                 created += 1
     return {"success": True, "message": "Transactions imported and rule checks completed", "total_records": len(rows), "successful": len(accepted), "rejected": len(rows)-len(accepted), "findings_detected": created, "errors": errors[:50]}
 
-@app.get("/api/transactions", tags=["transactions"])
+@app.get("/api/transactions", tags=["transactions"], response_model=TransactionPage, operation_id="listTransactions")
 def list_transactions(limit: int = 100, offset: int = 0) -> dict:
     limit = max(1, min(limit, 500)); offset = max(offset, 0)
     with connection() as db:
@@ -96,7 +101,7 @@ def list_transactions(limit: int = 100, offset: int = 0) -> dict:
         rows = db.execute("SELECT * FROM transactions ORDER BY id DESC LIMIT ? OFFSET ?", (limit, offset)).fetchall()
     return {"items": [dict(r) for r in rows], "total": total, "limit": limit, "offset": offset}
 
-@app.get("/api/summary", tags=["transactions"])
+@app.get("/api/summary", tags=["transactions"], response_model=Summary, operation_id="getSummary")
 def summary() -> dict:
     with connection() as db:
         tx = db.execute("SELECT COUNT(*) count, COALESCE(SUM(amount),0) total FROM transactions").fetchone()
@@ -104,13 +109,14 @@ def summary() -> dict:
         open_findings = db.execute("SELECT COUNT(*) FROM findings WHERE status='open'").fetchone()[0]
     return {"transaction_count": tx["count"], "total_amount": tx["total"], "finding_count": findings, "open_finding_count": open_findings}
 
-@app.get("/api/findings", tags=["findings"])
+@app.get("/api/findings", tags=["findings"], response_model=list[Finding], operation_id="listFindings")
 def list_findings() -> list[dict]:
     with connection() as db:
         rows = db.execute("SELECT f.*, t.date, t.description, t.amount, t.currency, t.supplier, t.reference FROM findings f JOIN transactions t ON t.id=f.transaction_id ORDER BY f.id DESC").fetchall()
     return [{**dict(r), "evidence": json.loads(r["evidence_json"])} for r in rows]
 
-@app.post("/api/findings/{finding_id}/explain", tags=["AI"])
+@app.post("/api/findings/{finding_id}/explain", tags=["AI"], response_model=Explanation, operation_id="explainFinding",
+          responses={404: {"description": "Finding not found"}, 503: {"description": "Inference unavailable or invalid model output"}})
 async def explain_finding(finding_id: int) -> dict:
     with connection() as db:
         row = db.execute("SELECT * FROM findings WHERE id=?", (finding_id,)).fetchone()
@@ -126,7 +132,8 @@ async def explain_finding(finding_id: int) -> dict:
         db.execute("INSERT INTO explanations(finding_id,model,result_json) VALUES(?,?,?)", (finding_id, model, json.dumps(result)))
     return result
 
-@app.post("/api/findings/{finding_id}/review", tags=["findings"])
+@app.post("/api/findings/{finding_id}/review", tags=["findings"], response_model=Review, operation_id="reviewFinding",
+          responses={404: {"description": "Finding not found"}})
 def review_finding(finding_id: int, request: ReviewRequest) -> dict:
     with connection() as db:
         if not db.execute("SELECT 1 FROM findings WHERE id=?", (finding_id,)).fetchone(): raise HTTPException(404, "Finding not found")

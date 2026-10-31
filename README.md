@@ -2,6 +2,25 @@
 
 FastAPI service connecting the auditor-facing API, SQLite persistence, the data engine, and Gemma inference. It is designed to expose **observed evidence** separately from AI-generated interpretation. Models do not query databases or perform financial actions.
 
+## Open-source license and integration
+
+Application code is released under the [MIT License](LICENSE). Third-party dependencies, model weights and hosted services retain their own licenses/terms; the MIT license does not relicense Gemma or Google AI Studio.
+
+- **Integrator guide:** [docs/INTEGRATION.md](docs/INTEGRATION.md) — Python, JavaScript and curl examples, errors, CORS, deployment and current limitations.
+- **Machine-readable API contract:** [docs/openapi.json](docs/openapi.json); live `/openapi.json`, `/docs` and `/redoc` on FastAPI.
+- **Python client:** `python -m pip install ./sdk/python` from a clone (not published to PyPI).
+- **Contributions:** [CONTRIBUTING.md](CONTRIBUTING.md).
+
+```python
+from fintech_ai import FintechAIClient
+
+with FintechAIClient("http://localhost:8000") as api:
+    print(api.upload_csv("demo-data/01_mixed_office_transactions.csv"))
+    print(api.findings())
+```
+
+The API is pre-1.0; it is not a production-hardened financial platform. Use synthetic records for public demos.
+
 ## Run
 
 ```powershell
@@ -56,7 +75,7 @@ Cloud mode sends the finding's transaction and evidence to Google. Use synthetic
 
 ## Team tunnel (temporary demo)
 
-The previous Cloudflare Quick Tunnel was unauthenticated and intended only for synthetic-data demos. It has been stopped while cloud-backed inference is configured. Do not restart a public tunnel with cloud mode enabled until access controls and rate limits are added. For a persistent demo, expose only the HTTPS frontend/API; keep Ollama and cloud provider credentials server-side and private.
+A temporary unauthenticated Cloudflare Quick Tunnel was explicitly enabled for the team's synthetic-data demo, exposing the frontend, API and local Ollama proxy. It is scheduled to stop after its one-hour demo window; do not treat its URL as a permanent integration endpoint. Anyone with the URL can mutate demo records and consume cloud/local inference. Before persistent access, add authentication and rate limits, expose only the HTTPS frontend/API, and keep inference networks and provider credentials private.
 
 ## Security and limitations
 

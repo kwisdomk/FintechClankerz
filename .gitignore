@@ -15,3 +15,8 @@ cloudflared.pid
 
 node_modules/
 .next/
+build/
+dist/
+*.egg-info/
+*.log
+~$*.pptx

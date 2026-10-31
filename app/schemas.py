@@ -35,5 +35,53 @@ class Finding(BaseModel):
     finding_type: str
     severity: str
     evidence: list[Any]
+    evidence_json: str
     status: str
+    created_at: str
+    date: str
+    description: str
+    amount: float
+    currency: str
+    supplier: str | None
+    reference: str | None
+
+
+class Health(BaseModel):
+    status: str
+    service: str
+    database: str
+
+
+class Transaction(BaseModel):
+    id: int
+    date: str
+    description: str
+    amount: float
+    currency: str
+    supplier: str | None
+    reference: str | None
+    source_row: int
+    created_at: str
+
+
+class TransactionPage(BaseModel):
+    items: list[Transaction]
+    total: int
+    limit: int
+    offset: int
+
+
+class Summary(BaseModel):
+    transaction_count: int
+    total_amount: float
+    finding_count: int
+    open_finding_count: int
+
+
+class Review(BaseModel):
+    id: int
+    finding_id: int
+    decision: Literal["confirmed", "dismissed", "needs_review"]
+    notes: str | None
+    reviewer: str | None
     created_at: str
