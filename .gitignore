@@ -8,3 +8,6 @@ aura.db
 server.log
 server.pid
 .DS_Store
+
+node_modules/
+.next/

@@ -1,0 +1,10 @@
+Rows read: 100
+Rows accepted: 100
+Rows rejected: 0
+Duplicate transaction IDs found: 0
+Invalid dates found: 0
+Invalid/non-positive amounts found: 0
+Malformed CSV rows: parser raises an error rather than silently accepting them.
+Possible duplicate rows: 6
+Anomaly rows reported: 34
+Rows needing categorization review: 0
