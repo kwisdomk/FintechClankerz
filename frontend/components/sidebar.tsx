@@ -32,7 +32,8 @@ export default function Sidebar() {
           <ShieldCheck className="h-6 w-6 shrink-0 text-emerald-500" />
           {!collapsed && (
             <span className="ml-2 font-bold tracking-wide text-white">
-              AURA AI
+              <span>FINTECH AI</span>
+              <small className="ml-2 text-[10px] font-normal text-slate-400">Digital Surfers</small>
             </span>
           )}
         </div>

@@ -1,68 +1,24 @@
-// app/dashboard/page.tsx
-"use client"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui"
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts"
-import { DollarSign, FileText, AlertTriangle } from "lucide-react"
-
-const mockData = [
-  { date: 'Oct 22', amount: 4000 },
-  { date: 'Oct 24', amount: 8000 },
-  { date: 'Oct 26', amount: 15000 },
-  { date: 'Oct 28', amount: 22000 },
-]
+"use client";
+import { useEffect, useState } from "react";
+import { AlertTriangle, FileText, Wallet, RefreshCw } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
+import { api, Summary } from "@/lib/api";
 
 export default function DashboardPage() {
-  return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-slate-900">Overview Dashboard</h1>
-        <div className="text-sm font-medium text-slate-700 bg-white px-4 py-2 border border-slate-200 rounded-md shadow-sm">Date Range: Oct 2026</div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between !border-b-0 pb-2">
-            <CardTitle className="text-sm text-slate-600">Total Expenditure</CardTitle>
-            <DollarSign className="w-4 h-4 text-emerald-600" />
-          </CardHeader>
-          <CardContent><div className="text-3xl font-bold text-slate-900">KSh 4.2M</div></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between !border-b-0 pb-2">
-            <CardTitle className="text-sm text-slate-600">Transactions</CardTitle>
-            <FileText className="w-4 h-4 text-slate-400" />
-          </CardHeader>
-          <CardContent><div className="text-3xl font-bold text-slate-900">1,492</div></CardContent>
-        </Card>
-        <Card className="border-red-200 bg-red-50">
-          <CardHeader className="flex flex-row items-center justify-between !border-b-0 pb-2">
-            <CardTitle className="text-sm text-red-800">Duplicates</CardTitle>
-            <AlertTriangle className="w-4 h-4 text-red-600" />
-          </CardHeader>
-          <CardContent><div className="text-3xl font-bold text-red-700">3</div></CardContent>
-        </Card>
-        <Card className="border-amber-200 bg-amber-50">
-          <CardHeader className="flex flex-row items-center justify-between !border-b-0 pb-2">
-            <CardTitle className="text-sm text-amber-800">Unusual Amounts</CardTitle>
-            <AlertTriangle className="w-4 h-4 text-amber-600" />
-          </CardHeader>
-          <CardContent><div className="text-3xl font-bold text-amber-700">7</div></CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader><CardTitle>Spending Over Time</CardTitle></CardHeader>
-        <CardContent className="h-[350px] pt-6">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={mockData}>
-              <XAxis dataKey="date" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-              <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `KSh ${val/1000}k`} />
-              <Tooltip cursor={{fill: '#f8fafc'}} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-              <Line type="monotone" dataKey="amount" stroke="#10b981" strokeWidth={3} dot={{r: 4, fill: '#10b981', strokeWidth: 2, stroke: '#fff'}} />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-    </div>
-  )
+  const [data, setData] = useState<Summary | null>(null);
+  const [error, setError] = useState("");
+  const load = () => api<Summary>("/api/summary").then(setData).catch(e => setError(e.message));
+  useEffect(() => { void load(); }, []);
+  const metrics = [
+    { label: "Transactions", value: data?.transaction_count ?? "—", icon: FileText },
+    { label: "Total transaction value", value: data ? `${data.total_amount.toLocaleString()}` : "—", icon: Wallet },
+    { label: "Findings", value: data?.finding_count ?? "—", icon: AlertTriangle },
+    { label: "Open for review", value: data?.open_finding_count ?? "—", icon: RefreshCw },
+  ];
+  return <div className="mx-auto max-w-6xl space-y-6">
+    <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-sm font-semibold text-emerald-700">DIGITAL SURFERS · FINTECH AI</p><h1 className="mt-1 text-3xl font-bold text-slate-900">Audit overview</h1><p className="mt-1 text-slate-500">Live metrics from your imported records.</p></div><button onClick={load} className="rounded-lg border bg-white px-4 py-2 text-sm hover:bg-slate-50">Refresh</button></div>
+    {error && <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">{error}</div>}
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{metrics.map(({label,value,icon:Icon})=><Card key={label}><CardHeader className="flex flex-row items-center justify-between pb-2"><CardTitle className="text-sm text-slate-600">{label}</CardTitle><Icon className="h-4 w-4 text-emerald-600"/></CardHeader><CardContent><div className="text-3xl font-bold text-slate-900">{value}</div></CardContent></Card>)}</div>
+    <Card><CardHeader><CardTitle>Review workflow</CardTitle></CardHeader><CardContent className="text-sm leading-6 text-slate-600">Import a transaction CSV, inspect rule-based duplicate findings, then request a Gemma explanation when useful. Findings come from deterministic checks; AI is optional and does not make audit decisions.</CardContent></Card>
+  </div>;
 }

@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    app_name: str = "AURA AI Backend"
+    app_name: str = "FINTECH AI Backend"
     database_url: str = "sqlite:///./aura.db"
     frontend_origins: str = "http://localhost:3000"
     ollama_base_url: str = "http://127.0.0.1:11434"

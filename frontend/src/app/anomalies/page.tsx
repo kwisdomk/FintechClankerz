@@ -1,104 +1,13 @@
-// app/anomalies/page.tsx
-import { Card, CardHeader, CardTitle, CardContent, Badge, Button } from "@/components/ui"
-import { Server, Cloud, BrainCircuit, Activity } from "lucide-react"
+"use client";
+import { useEffect, useState } from "react";
+import { api, Finding } from "@/lib/api";
+import { Card, CardContent, CardHeader, CardTitle, Badge, Button } from "@/components/ui";
 
-export default function AnomaliesPage() {
-  return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold text-slate-900">Investigations & AI Explanations</h1>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="border-slate-300">
-            <CardHeader className="bg-white flex flex-row justify-between items-start">
-              <div>
-                <CardTitle className="text-xl flex items-center gap-3">
-                  Transaction #TXN-1042
-                  <Badge variant="destructive" className="uppercase tracking-wider">High Priority</Badge>
-                </CardTitle>
-                <p className="text-sm font-medium text-slate-600 mt-2">KSh 185,000 · ABC Office Supplies · 29 October 2026</p>
-              </div>
-              <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-emerald-200">Investigation Open</Badge>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              
-              <div>
-                <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2 mb-3">
-                  <BrainCircuit className="w-5 h-5 text-emerald-600" /> AI Finding: Why it was flagged
-                </h4>
-                <div className="text-sm text-slate-800 bg-slate-50 p-5 rounded-md border border-slate-200 leading-relaxed space-y-3">
-                  <p>• The amount is significantly above the supplier's historical average of KSh 25,000.</p>
-                  <p>• A similar payment was recorded three days earlier, indicating a potential duplicate.</p>
-                  <p>• The payment reference format does not match standard internal structures.</p>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-sm font-bold text-slate-900 mb-3">Observed Evidence</h4>
-                <div className="space-y-3">
-                  <div className="text-sm flex justify-between p-4 bg-white border border-slate-200 rounded-md shadow-sm">
-                    <span className="font-medium text-slate-700">26 Oct - ABC Office Supplies (Previous)</span>
-                    <span className="font-bold text-slate-900">KSh 185,000</span>
-                  </div>
-                  <div className="text-sm flex justify-between p-4 bg-red-50 border border-red-200 rounded-md shadow-sm">
-                    <span className="font-medium text-red-900">29 Oct - ABC Office Supplies (Flagged)</span>
-                    <span className="font-bold text-red-900">KSh 185,000</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-t border-slate-100 pt-6">
-                <Button className="w-full">Chat with Gemma 4 about this finding</Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="space-y-6">
-          <Card>
-            <CardHeader className="bg-slate-50">
-              <CardTitle className="text-sm flex items-center gap-2 text-slate-800">
-                <Activity className="w-4 h-4 text-emerald-600" /> AI Infrastructure Status
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              
-              <div className="flex items-center justify-between p-4 border border-slate-200 rounded-md bg-white shadow-sm">
-                <div className="flex items-center gap-3">
-                  <Server className="w-5 h-5 text-slate-500" />
-                  <div>
-                    <p className="text-sm font-bold text-slate-900">Local Inference</p>
-                    <p className="text-xs text-slate-500 mt-0.5">Ollama · Gemma 4</p>
-                  </div>
-                </div>
-                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">Connected</Badge>
-              </div>
-
-              <div className="flex items-center justify-between p-4 border border-slate-200 rounded-md bg-white shadow-sm">
-                <div className="flex items-center gap-3">
-                  <Cloud className="w-5 h-5 text-slate-500" />
-                  <div>
-                    <p className="text-sm font-bold text-slate-900">Cloud Inference</p>
-                    <p className="text-xs text-slate-500 mt-0.5">Gemma 4 Provider</p>
-                  </div>
-                </div>
-                <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200">Connected</Badge>
-              </div>
-
-              <div className="mt-6 pt-6 border-t border-slate-100 text-sm">
-                <p className="font-bold text-slate-900 mb-4">Latest Inference Lifecycle</p>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center"><span className="text-slate-500">Model Used:</span> <span className="font-medium text-slate-900">Local Gemma 4</span></div>
-                  <div className="flex justify-between items-center"><span className="text-slate-500">Execution:</span> <span className="font-medium text-slate-900">Local</span></div>
-                  <div className="flex justify-between items-center"><span className="text-slate-500">Duration:</span> <span className="font-medium text-slate-900">2.4 seconds</span></div>
-                  <div className="flex justify-between items-center"><span className="text-slate-500">Escalation:</span> <span className="font-medium text-slate-900">Not required</span></div>
-                </div>
-              </div>
-
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
-  )
+type Explanation={model_used:string;finding:string;observed_evidence:string[];possible_explanations:string[];recommended_actions:string[]};
+export default function AnomaliesPage(){
+ const [items,setItems]=useState<Finding[]>([]);const [error,setError]=useState("");const [busy,setBusy]=useState<number|null>(null);const [results,setResults]=useState<Record<number,Explanation>>({});
+ const load=()=>api<Finding[]>('/api/findings').then(setItems).catch(e=>setError(e.message));useEffect(()=>{void load()},[]);
+ async function explain(id:number){setBusy(id);setError("");try{const result=await api<Explanation>(`/api/findings/${id}/explain`,{method:'POST'});setResults(r=>({...r,[id]:result}));}catch(e){setError((e as Error).message)}finally{setBusy(null)}}
+ async function review(id:number,decision:'confirmed'|'dismissed'|'needs_review'){setBusy(id);setError("");try{await api(`/api/findings/${id}/review`,{method:'POST',body:JSON.stringify({decision,reviewer:'Auditor'})});await load()}catch(e){setError((e as Error).message)}finally{setBusy(null)}}
+ return <div className="mx-auto max-w-5xl space-y-6"><div><p className="text-sm font-semibold text-emerald-700">HUMAN-IN-THE-LOOP</p><h1 className="text-3xl font-bold">Findings & investigations</h1><p className="mt-1 text-slate-500">Evidence comes from stored records. Gemma provides optional interpretation.</p></div>{error&&<p role="alert" className="rounded border border-amber-300 bg-amber-50 p-3 text-amber-900">{error}</p>}{!items.length&&!error&&<Card><CardContent className="py-12 text-center text-slate-500">No findings yet. Upload records with repeat references or same supplier, amount, and date.</CardContent></Card>}{items.map(f=><Card key={f.id}><CardHeader className="flex flex-wrap items-start justify-between gap-3"><div><CardTitle>Finding #{f.id} · {f.finding_type.replaceAll('_',' ')}</CardTitle><p className="mt-2 text-sm text-slate-600">{f.supplier||'Unknown supplier'} · {f.currency} {f.amount.toLocaleString()} · {f.date} · Txn #{f.transaction_id}</p></div><Badge variant={f.status==='open'?'destructive':'secondary'}>{f.status}</Badge></CardHeader><CardContent className="space-y-4"><div><h3 className="mb-2 font-semibold">Observed evidence</h3><ul className="list-disc space-y-1 pl-5 text-sm text-slate-700">{f.evidence.map((e,i)=><li key={i}>{e}</li>)}</ul></div>{results[f.id]&&<section className="rounded-lg bg-emerald-50 p-4"><p className="text-xs font-semibold uppercase text-emerald-800">AI interpretation · {results[f.id].model_used}</p><p className="mt-2 font-medium">{results[f.id].finding}</p><ul className="mt-2 list-disc pl-5 text-sm">{results[f.id].possible_explanations?.map((x,i)=><li key={i}>{x}</li>)}</ul></section>}<div className="flex flex-wrap gap-2"><Button disabled={busy===f.id} onClick={()=>explain(f.id)}>{busy===f.id?'Working…':'Generate Gemma explanation'}</Button><Button variant="outline" disabled={busy===f.id} onClick={()=>review(f.id,'confirmed')}>Confirm</Button><Button variant="outline" disabled={busy===f.id} onClick={()=>review(f.id,'dismissed')}>Dismiss</Button></div></CardContent></Card>)}</div>;
 }
