@@ -1,4 +1,4 @@
-# AURA AI Backend — Member 3: API & AI Integration
+# FINTECH AI Backend — Member 3: API & AI Integration
 
 FastAPI service connecting the auditor-facing API, SQLite persistence, the data engine, and Gemma inference. It is designed to expose **observed evidence** separately from AI-generated interpretation. Models do not query databases or perform financial actions.
 
