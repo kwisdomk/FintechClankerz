@@ -54,7 +54,7 @@ Configure `OLLAMA_BASE_URL`, `OLLAMA_MODEL`, and `AI_TIMEOUT_SECONDS` in `.env`.
 
 ## Team tunnel (temporary demo)
 
-Expose only the Next.js frontend on port 3000 through Cloudflare Tunnel. The frontend's authenticated `/api/*` proxy calls FastAPI on loopback; Ollama remains on loopback port 11434 and is never directly tunneled. Set `TEAM_ACCESS_PASSWORD` in ignored `frontend/.env.local`; the Next proxy fails closed when it is missing. The current Quick Tunnel URL is temporary and Basic Auth is a shared demo credential. For persistent team use, replace Quick Tunnel with a named tunnel and Cloudflare Access allowlisting team identities.
+Expose only the Next.js frontend on port 3000 through Cloudflare Tunnel. The frontend's authenticated `/api/*` proxy calls FastAPI on loopback; Ollama remains on loopback port 11434 and is never directly tunneled. Set `TEAM_ACCESS_PASSWORD` in ignored `frontend/.env.local`; the Next proxy fails closed when it is missing. The current Quick Tunnel URL is temporary and unauthenticated for this synthetic-data demo. Do not upload real financial records or share it beyond the intended demo; stop the tunnel after testing. For persistent use, add Cloudflare Access and restrict access to team identities.
 
 ## Security and limitations
 
