@@ -25,7 +25,7 @@ uvicorn app.main:app --reload
 | GET | `/api/transactions` | Paginated records (`limit`, `offset`) |
 | GET | `/api/summary` | Transaction count, total amount, finding and open-finding counts |
 | GET | `/api/findings` | Findings joined to their transaction details and observed evidence |
-| POST | `/api/findings/{id}/explain` | Ask configured Ollama model for an explanation; persist response; 503 if unavailable |
+| POST | `/api/findings/{id}/explain` | Ask the configured local Ollama or Google AI Studio model for an explanation; persist response; 503 if unavailable |
 | POST | `/api/findings/{id}/review` | Validate and persist `confirmed`, `dismissed`, or `needs_review` plus reviewer/notes and timestamp |
 
 Upload example response:
@@ -42,20 +42,22 @@ With the server running, open `/docs` and try the upload, summary, and findings 
 python scripts/seed_demo.py
 ```
 
-Then call `GET /api/findings`; take its `id` and use it in `POST /api/findings/{id}/review` with `{"decision":"confirmed","notes":"Demo review","reviewer":"Tester"}`. Try `POST /api/findings/{id}/explain` to exercise Ollama; if Ollama is not configured/reachable this correctly returns 503 while other endpoints stay usable. To test CSV import, use `demo-transactions.csv` in `POST /api/upload`; one deliberately invalid row demonstrates row validation. The seed script is idempotent and does not clear existing data.
+Then call `GET /api/findings`; take its `id` and use it in `POST /api/findings/{id}/review` with `{"decision":"confirmed","notes":"Demo review","reviewer":"Tester"}`. `POST /api/findings/{id}/explain` calls the provider selected by `AI_PROVIDER`; if that provider is unavailable, the endpoint returns 503 while transaction and review APIs remain usable. To test CSV import, use `demo-transactions.csv` in `POST /api/upload`; one deliberately invalid row demonstrates row validation. The seed script is idempotent and does not clear existing data.
 
 ## Current boundary / integration needed
 
 The SQLite schema stores transactions, findings, explanations, and review history. Upload accepts both the data-engine export headers and the simpler demo format. It currently runs deterministic duplicate checks (repeated payment reference; same supplier, amount, and date) without an LLM. The broader Isolation Forest/high-amount/category pipeline on `main` is not yet called by the API; integrating that callable pipeline is the next data-engine step.
 
-## Gemma / Ollama
+## Inference providers: Ollama and Google AI Studio
 
-Configure `OLLAMA_BASE_URL`, `OLLAMA_MODEL`, and `AI_TIMEOUT_SECONDS` in `.env`. Start Ollama on the trusted inference machine, pull the agreed Gemma model, and verify its `/api/generate` endpoint before setting the URL. For a separate host, use a trusted private LAN/VPN and firewall-restrict access; do not expose Ollama publicly. The explanation endpoint sends the transaction and rule-provided evidence to that service, expects JSON, validates its shape, then replaces model-authored observed evidence with the server's authoritative evidence before persistence. AI failure does not prevent the finding/review APIs from working. Hosted inference is not enabled; do not send sensitive records to a hosted provider until the team explicitly approves data handling and credentials.
+Local inference remains the default (`AI_PROVIDER=local`). Configure `OLLAMA_BASE_URL` and `OLLAMA_MODEL` to use Ollama on the same machine or a trusted private network; never expose port 11434 publicly. Google AI Studio cloud inference is also implemented and was verified with `gemma-4-26b-a4b-it` using synthetic demo evidence. Configure `AI_PROVIDER=cloud`, `CLOUD_AI_API_KEY`, `CLOUD_AI_MODEL=gemma-4-26b-a4b-it`, and optionally `GOOGLE_GENAI_BASE_URL`. `AI_PROVIDER=local_then_cloud` tries local first and calls Google only if local inference fails. Keep the key in ignored `.env` only—never commit it.
+
+Cloud mode sends the finding's transaction and evidence to Google. Use synthetic data unless your team approves the provider's data-handling terms for real financial records. The explanation endpoint validates the model response and replaces model-authored observed evidence with server-owned evidence before persistence. AI outages do not block transaction or review APIs. Because a public unauthenticated explain route can consume your quota, do not expose cloud mode through a public tunnel without access controls and rate limits.
 
 ## Team tunnel (temporary demo)
 
-Expose only the Next.js frontend on port 3000 through Cloudflare Tunnel. The frontend's authenticated `/api/*` proxy calls FastAPI on loopback; Ollama remains on loopback port 11434 and is never directly tunneled. Set `TEAM_ACCESS_PASSWORD` in ignored `frontend/.env.local`; the Next proxy fails closed when it is missing. The current Quick Tunnel URL is temporary and unauthenticated for this synthetic-data demo. Do not upload real financial records or share it beyond the intended demo; stop the tunnel after testing. For persistent use, add Cloudflare Access and restrict access to team identities.
+The previous Cloudflare Quick Tunnel was unauthenticated and intended only for synthetic-data demos. It has been stopped while cloud-backed inference is configured. Do not restart a public tunnel with cloud mode enabled until access controls and rate limits are added. For a persistent demo, expose only the HTTPS frontend/API; keep Ollama and cloud provider credentials server-side and private.
 
 ## Security and limitations
 
-Credentials belong only in ignored `.env`; validate/limit uploaded files; never treat model output as financial truth. SQLite is the hackathon/local database; deployment hardening, authentication/authorization, migrations, rate limits, and hosted-provider policy remain follow-up work. CSV date parsing and finding payload shape should be settled with the data-engine owner.
+Credentials belong only in ignored `.env`; rotate keys that have been pasted into chat or committed. Validate/limit uploaded files; never treat model output as financial truth. SQLite is the hackathon/local database; deployment hardening, authentication/authorization, migrations, rate limits, and hosted-provider approval remain follow-up work. CSV date parsing and finding payload shape should be settled with the data-engine owner.
