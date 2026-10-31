@@ -37,4 +37,4 @@ export const TableHeader = ({ children }: { children: React.ReactNode }) => <the
 export const TableBody = ({ children }: { children: React.ReactNode }) => <tbody className="[&_tr:last-child]:border-0">{children}</tbody>
 export const TableRow = ({ children }: { children: React.ReactNode }) => <tr className="border-b border-slate-200 transition-colors hover:bg-slate-50">{children}</tr>
 export const TableHead = ({ children, className }: { children: React.ReactNode, className?: string }) => <th className={`h-10 px-4 text-left align-middle font-semibold text-slate-700 ${className || ''}`}>{children}</th>
-export const TableCell = ({ children, className }: { children: React.ReactNode, className?: string }) => <td className={`p-4 align-middle text-slate-700 ${className || ''}`}>{children}</td>
+export const TableCell = ({ children, className, colSpan }: { children: React.ReactNode, className?: string, colSpan?: number }) => <td colSpan={colSpan} className={`p-4 align-middle text-slate-700 ${className || ''}`}>{children}</td>

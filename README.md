@@ -52,6 +52,10 @@ The SQLite schema stores transactions, findings, explanations, and review histor
 
 Configure `OLLAMA_BASE_URL`, `OLLAMA_MODEL`, and `AI_TIMEOUT_SECONDS` in `.env`. Start Ollama on the trusted inference machine, pull the agreed Gemma model, and verify its `/api/generate` endpoint before setting the URL. For a separate host, use a trusted private LAN/VPN and firewall-restrict access; do not expose Ollama publicly. The explanation endpoint sends the transaction and rule-provided evidence to that service, expects JSON, validates its shape, then replaces model-authored observed evidence with the server's authoritative evidence before persistence. AI failure does not prevent the finding/review APIs from working. Hosted inference is not enabled; do not send sensitive records to a hosted provider until the team explicitly approves data handling and credentials.
 
+## Team tunnel (temporary demo)
+
+Expose only the Next.js frontend on port 3000 through Cloudflare Tunnel. The frontend's authenticated `/api/*` proxy calls FastAPI on loopback; Ollama remains on loopback port 11434 and is never directly tunneled. Set `TEAM_ACCESS_PASSWORD` in ignored `frontend/.env.local`; the Next proxy fails closed when it is missing. The current Quick Tunnel URL is temporary and Basic Auth is a shared demo credential. For persistent team use, replace Quick Tunnel with a named tunnel and Cloudflare Access allowlisting team identities.
+
 ## Security and limitations
 
 Credentials belong only in ignored `.env`; validate/limit uploaded files; never treat model output as financial truth. SQLite is the hackathon/local database; deployment hardening, authentication/authorization, migrations, rate limits, and hosted-provider policy remain follow-up work. CSV date parsing and finding payload shape should be settled with the data-engine owner.

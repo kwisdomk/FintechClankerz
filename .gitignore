@@ -7,6 +7,10 @@ aura.db
 *.sqlite3
 server.log
 server.pid
+frontend-server.log
+frontend-server.pid
+cloudflare-tunnel.log
+cloudflared.pid
 .DS_Store
 
 node_modules/
