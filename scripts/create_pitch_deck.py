@@ -4,7 +4,8 @@ from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import PP_ALIGN
 from pptx.util import Inches, Pt
 
-OUT = "FINTECH_AI_Demo_Final_5_Slides.pptx"
+OUT = "FINTECH_AI_Updated_5_Slides.pptx"
+DEMO_HOST = "first-reseller-flows-statutes.trycloudflare.com"
 prs = Presentation(); prs.slide_width, prs.slide_height = Inches(13.333), Inches(7.5)
 NAVY=RGBColor(10,20,37); PANEL=RGBColor(20,35,56); PANEL2=RGBColor(25,45,67); TEAL=RGBColor(58,220,190); WHITE=RGBColor(240,246,250); MUTED=RGBColor(164,183,201); GOLD=RGBColor(255,193,94)
 
@@ -32,8 +33,9 @@ def slide(kicker,heading,sub=None):
 s=slide("FINANCIAL AUDIT MVP","Find the signal. Keep the auditor in control.","FINTECH AI — Digital Surfers | Evidence-led investigation of unusual financial transactions")
 card(s,.75,2.05,5.75,4.45,PANEL);text(s,1.05,2.35,5,.3,"THE PROBLEM",13,GOLD,True)
 bullets(s,1.05,2.95,5.05,["High-volume transaction spreadsheets make unusual items hard to spot.","A raw anomaly flag lacks context and follow-up evidence.","Review decisions and investigation history need a consistent record."],16,.88)
-card(s,6.8,2.05,5.75,4.45,PANEL2);text(s,7.1,2.35,5,.3,"INTENDED USERS",13,TEAL,True)
-bullets(s,7.1,2.95,5.05,["Internal / external auditors", "Finance control and compliance teams", "Audit leads who need a review trail"],16,.88)
+card(s,6.8,2.05,5.75,4.45,PANEL2);text(s,7.1,2.35,5,.3,"BEYOND BANKS: 10 BUSINESS CATEGORIES",13,TEAL,True)
+bullets(s,7.1,2.9,5.05,["Retail + e-commerce: supplier / fulfilment payments","Restaurants / hotels + logistics: operating expenses","Schools + hospitals: procurement invoices","NGOs + construction: project / contractor costs","Manufacturers + audit firms: vendor / client review"],14,.56)
+text(s,7.13,5.81,4.9,.5,"Users: auditors, finance-control teams and business owners.",12,MUTED)
 text(s,1.05,5.95,10.9,.4,"AI assists investigation; it does not decide fraud or replace professional judgment.",14,TEAL,True)
 
 # 2: proposed solution
@@ -52,10 +54,13 @@ for x,h,lines in cols:
     card(s,x,2.15,2.35,2.6,PANEL);text(s,x+.17,2.42,2,.3,h,12,TEAL,True);bullets(s,x+.17,2.92,2.02,lines,12,.53)
 for x in [3.25,6.4,9.55]:text(s,x,3.15,.4,.35,"→",19,TEAL,True,align=PP_ALIGN.CENTER)
 card(s,.75,5.08,11.8,1.3,PANEL2);text(s,1.02,5.28,11,.3,"REPRODUCIBLE EVIDENCE",12,GOLD,True)
-text(s,1.02,5.68,11.2,.5,"3 backend tests passed • public cloud explain + local generation succeeded • separate Pandas / Isolation Forest sample: 100 accepted, 6 duplicate rows, 34 anomaly rows (not yet wired into upload).",13,WHITE)
+text(s,1.02,5.68,11.2,.5,"7 backend / SDK tests passed • SDK wheel built • frontend TypeScript check passed • cloud + local inference verified. Separate pipeline sample: 100 accepted, 6 duplicate rows, 34 anomalies; full API hookup pending.",13,WHITE)
 
 # 4: live demonstration
-s=slide("LIVE DEMO / 90 SECONDS","CSV → duplicate evidence → Gemma explanation → review","Public app: ranks-atlanta-formerly-diverse.trycloudflare.com/dashboard")
+s=slide("LIVE DEMO / 90 SECONDS","CSV → duplicate evidence → Gemma explanation → review",f"Public app: {DEMO_HOST}/dashboard")
+for shape in s.shapes:
+    if shape.has_text_frame and shape.text.startswith("Public app:"):
+        shape.text_frame.paragraphs[0].runs[0].hyperlink.address = f"https://{DEMO_HOST}/dashboard"
 card(s,.75,2.05,6.1,4.5,PANEL);text(s,1.05,2.35,5.4,.3,"SHOW THE END-TO-END FLOW",12,TEAL,True)
 bullets(s,1.05,2.9,5.4,["Upload 01_mixed_office_transactions.csv (20 valid rows).", "Open Anomalies & AI; inspect a duplicate candidate.", "Explain: Google-hosted Gemma interprets the supplied evidence.", "Save review; refresh to show persisted status.", "Local model: POST /ollama/api/generate; Swagger: /backend/docs"],14,.64)
 card(s,7.15,2.05,5.4,4.5,PANEL2);text(s,7.48,2.35,4.8,.3,"THREE SYNTHETIC DEMO FILES",12,GOLD,True)
@@ -63,30 +68,31 @@ bullets(s,7.48,2.9,4.75,["01 Office: 20 valid rows; varied costs + duplicate can
 text(s,1.05,6.7,11.2,.25,"CSV downloads: /demo-data/ on the same host. Public smoke test passed upload → finding → saved review; local and cloud generation both succeeded.",10,MUTED)
 
 # 5: impact, repository evidence and honest next steps
-s=slide("IMPACT / PUBLIC SOURCE / NEXT STEPS","Faster triage is the goal. Traceable review is the deliverable.","Value: bring records, candidate findings, AI interpretation and recorded human decisions into one workflow.")
-card(s,.75,2.0,5.75,4.6,PANEL);text(s,1.05,2.3,5,.3,"DELIVERED & REPRODUCIBLE",12,TEAL,True)
-bullets(s,1.05,2.82,5.05,["github.com/kwisdomk/FintechClankerz — public source; main + mbr-3 synced for demo.","Frontend, FastAPI, SQLite, analysis pipeline, tests, reports + synthetic CSVs.","Cloud + local Gemma responses verified; upload and review persist without AI.","Measure next: triage time and review completeness versus spreadsheets; no savings claim yet."],14,.82)
-card(s,6.8,2.0,5.75,4.6,PANEL2);text(s,7.1,2.3,5,.3,"LIMITATIONS & NEXT DEPLOYMENT",12,GOLD,True)
-bullets(s,7.1,2.82,5.05,["Wire the full Isolation Forest pipeline into the upload API; current live screening is duplicate rules.","Add team-approved OSS license, access controls, rate limits and provider data policy.","DigitalOcean GPU + private Ollama: researched, NOT deployed. RTX 4000 Ada 20GB is a candidate to benchmark.","Demo is temporarily unauthenticated; synthetic records only. Cloud Explain sends evidence to Google."],13,.82)
+s=slide("MIT OPEN SOURCE / INTEGRATION / NEXT STEPS","Built to review payments. Open for others to integrate.","Impact target: reduce spreadsheet hunting and improve review traceability; time savings and accuracy are not yet measured.")
+card(s,.75,2.0,5.75,4.6,PANEL);text(s,1.05,2.3,5,.3,"DELIVERED: REUSABLE APPLICATION CODE",12,TEAL,True)
+bullets(s,1.05,2.82,5.05,["MIT LICENSE • github.com/kwisdomk/FintechClankerz • main + mbr-3.","API v0.4.0: typed OpenAPI 3.1 contract, Swagger / ReDoc and stable operation IDs.","Python SDK: pip install ./sdk/python; JavaScript + curl integration examples.","docs/INTEGRATION.md • docs/openapi.json • CONTRIBUTING.md • tests + synthetic data."],14,.82)
+card(s,6.8,2.0,5.75,4.6,PANEL2);text(s,7.1,2.3,5,.3,"HONEST LIMITATIONS / WHAT COMES NEXT",12,GOLD,True)
+bullets(s,7.1,2.82,5.05,["Current screening: duplicate rules. Wire full Isolation Forest pipeline into upload next.","Pre-1.0 MVP: add authentication, rate limits, tenant isolation and robust currency/date handling.","DigitalOcean GPU + private Ollama: researched, NOT deployed. Benchmark a 20GB GPU before committing.","Synthetic public demo only. Cloud sends evidence to Google; model / provider terms are separate from MIT."],13,.82)
 text(s,.82,6.75,11.8,.23,"Cloud hosting today: Google AI Studio. Local inference today: developer machine + tunnel. DO research: digitalocean.com/products/gpu-droplets. Stop public access after the demo.",9,MUTED)
 
 prs.core_properties.title="FINTECH AI — Digital Surfers: Financial Audit Investigation MVP"
-prs.core_properties.subject="Five-minute, five-slide MVP: problem, workflow, cloud/local Gemma, live demo, impact and public-source evidence"
+prs.core_properties.subject="Five-minute, five-slide MVP: ten business use cases, workflow, local/cloud Gemma, live demo, MIT license and integration SDK"
 prs.core_properties.author="FINTECH AI / Digital Surfers"
 # Exactly five slides, with a five-minute presenter script.
 notes = [
-    "0:00–0:45 | Problem and users. We built FINTECH AI for auditors and finance-control teams. Spreadsheets contain many ordinary expenses and a few items worth checking, but a flag alone is not an investigation. Our goal is to put the original record, the screening evidence and the human decision together. We do not claim to detect fraud or replace an auditor. Transition: here is the workflow we implemented.",
-    "0:45–1:40 | Workflow. Import a CSV; accepted rows go into SQLite and rejected rows are reported. Screening is deterministic: repeated payment reference, or matching supplier, amount and date. These are possible duplicates, not proven duplicates. Gemma explains supplied evidence only; the server replaces any model-authored observed evidence with authoritative rule evidence before saving. The auditor chooses confirmed, dismissed or needs_review and the API persists the decision, reviewer, notes and time. AI failure does not stop importing or reviewing.",
-    "1:40–2:40 | Technical implementation. Next.js and React call same-origin proxy routes into FastAPI, Pydantic, HTTPX and SQLite. The app is currently configured for Google AI Studio model gemma-4-26b-a4b-it; it is Gemma, not a Gemini substitution. Local Ollama also runs gemma4:latest, a 7.5B Q4 model with roughly 6.6 GB of weights, reachable through the tunnel's /ollama endpoint. Both paths returned successful public requests. Provider selection supports local, cloud and local_then_cloud. Keys stay server-side in ignored .env, not the repo. Three backend tests passed. Separate analysis reports show 100 accepted rows, 6 duplicate rows and 34 anomalies; these are sample outputs, not an accuracy benchmark, and that broader pipeline is not yet called by upload.",
-    "2:40–4:10 | Live demo. Open https://ranks-atlanta-formerly-diverse.trycloudflare.com/dashboard and show the current summary. Upload 01_mixed_office_transactions.csv from demo-data. Go to Anomalies & AI; choose a new office-furniture or maintenance candidate. Show source evidence first, then click Explain to call Google-hosted Gemma. Allow around 35 seconds based on one earlier request, not an SLA. Save a review and refresh. If time permits, upload file 03: expect 16 accepted and 4 rejected for invalid amount, zero, negative and missing date. File 02 is an alternate retail example. Local-model request: POST /ollama/api/generate with JSON {\"model\":\"gemma4:latest\",\"prompt\":\"Explain duplicate payments briefly.\",\"stream\":false,\"think\":false}. A previous short local response took about 18 seconds; latency varies. Do not upload the same file repeatedly unless deliberately demonstrating repeated imports. If inference fails, show evidence and the review flow rather than claiming the AI succeeded. The tunnel is temporary and scheduled to stop an hour after launch.",
-    "4:10–5:00 | Impact, source and next steps. The working deliverable is traceable review, not a measured productivity or fraud-accuracy claim. The public GitHub repo includes the UI, API, broader data pipeline, reports and demo data. An explicit team-approved license is still missing, so be precise: public source today; licensed open-source release is a remaining action. DigitalOcean is a researched self-hosted option, not deployed infrastructure. We would benchmark a 20 GB GPU, run Ollama privately and persist weights for occasional windows; Google-hosted cloud inference already works today. Next: full pipeline adapter, license, access controls and rate limits, then evaluate triage time and review completeness. Close: AI assists; evidence and the auditor decide."
+    "0:00–0:45 | Good day. We are Digital Surfers and this is FINTECH AI. Finance teams need to find transactions worth checking and record what happens next. This is not just for banks. Ten potential customer categories are retailers, e-commerce businesses, restaurants and hotels, logistics firms, schools, hospitals, NGOs, construction companies, manufacturers, and accounting or audit firms. Examples include supplier invoices, procurement and contractor payments. These are potential use cases, not ten deployed customers. Our initial users are auditors and finance-control teams. We assist investigations, not determine fraud.",
+    "0:45–1:40 | The workflow is import, screen, explain and review. A CSV upload saves accepted transactions and reports rejected rows. Deterministic checks flag repeated references or matching supplier, amount and date. These are possible duplicates, not proof. Gemma interprets the supplied context; the backend preserves server-owned evidence. The auditor confirms, dismisses or selects needs_review. The API stores decision, reviewer, notes and timestamp. Inference failure does not block CSV processing or human review. Re-uploading a file appends data, so do not retry blindly.",
+    "1:40–2:40 | Next.js and React proxy requests to FastAPI, Pydantic, HTTPX and SQLite. The application Explain action is configured for Google AI Studio model gemma-4-26b-a4b-it. A separate local Ollama model, gemma4:latest, is 7.5B Q4_K_M with about 6.6 GB of weights. Both inference paths were verified publicly. Local-only, cloud-only and local-then-cloud provider selection are supported. Cloud use sends transaction context and evidence to Google; credentials stay in ignored server-side .env. Seven backend/SDK tests passed, the SDK wheel built and the frontend TypeScript check passed. A separate Pandas/Isolation Forest sample reported 100 accepted rows, 6 possible duplicate rows and 34 anomaly rows; these are sample counts, not a performance benchmark. The full pipeline is not yet invoked by upload.",
+    f"2:40–4:10 | Open https://{DEMO_HOST}/dashboard. Upload demo-data/01_mixed_office_transactions.csv: 20 valid synthetic office expenses. Open Anomalies & AI and select an office-furniture or maintenance candidate. Show evidence, request Explain, then save a human review and refresh. If the UI lacks a control, use Swagger at https://{DEMO_HOST}/backend/docs with an actual finding ID. File 02_mixed_retail_transactions.csv has 20 valid retail rows. File 03_mixed_projects_with_validation.csv has 16 valid and 4 deliberately invalid rows. Files are downloadable under /demo-data/ on the same host. Direct local generation is POST /ollama/api/generate with model gemma4:latest, prompt, stream=false and think=false; it is distinct from persisted audit explanations. Prior short local/cloud requests took roughly 18/35 seconds, not an SLA. If AI is slow, show evidence and saved review instead. Temporary tunnel, unauthenticated synthetic demo only; do not claim this hostname is permanent.",
+    "4:10–5:00 | Our deliverable is traceable review, not an unmeasured promise of fraud accuracy or time savings. The code now has an MIT license. Others can clone github.com/kwisdomk/FintechClankerz and install the SDK with pip install ./sdk/python. API version 0.4.0 provides typed OpenAPI 3.1 responses and operation IDs, live Swagger and ReDoc, and an exported docs/openapi.json. docs/INTEGRATION.md has Python, JavaScript and curl examples plus error and CORS guidance; CONTRIBUTING.md supports contributions. Model licenses and hosted-provider terms remain separate. Next: full pipeline hookup, authentication, rate limits, tenant isolation and currency/date hardening. DigitalOcean GPU hosting is researched, not deployed; a 20 GB GPU is a candidate to benchmark. Evaluate triage time and review completeness with users. Close: evidence first, AI assistance second, human judgment always."
 ]
 assert len(prs.slides) == 5
 for s, note in zip(prs.slides, notes):
     s.notes_slide.notes_text_frame.text = note
 prs.save(OUT)
-try:
-    prs.save("FINTECH_AI_MVP_Pitch.pptx")
-except PermissionError:
-    print("Original deck is open; updated final deck saved separately.")
+for alias in ["FINTECH_AI_Demo_Final_5_Slides.pptx", "FINTECH_AI_MVP_Pitch.pptx"]:
+    try:
+        prs.save(alias)
+    except PermissionError:
+        print(f"{alias} is open; updated deck saved as {OUT}.")
 print(OUT)
