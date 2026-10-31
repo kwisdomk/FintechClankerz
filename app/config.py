@@ -2,8 +2,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    app_name: str = "FINTECH AI Backend"
-    database_url: str = "sqlite:///./aura.db"
+    app_name: str = "FinGuard AI Backend"
+    database_url: str = "sqlite:///./finguard.db"
     frontend_origins: str = "http://localhost:3000"
     ollama_base_url: str = "http://127.0.0.1:11434"
     ollama_model: str = "gemma4"

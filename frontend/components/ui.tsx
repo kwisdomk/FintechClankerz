@@ -14,13 +14,13 @@ export function CardContent({ className, children }: { className?: string, child
   return <div className={`p-6 pt-4 ${className || ''}`}>{children}</div>
 }
 
-export function Button({ className, children, variant = 'primary', ...props }: any) {
+export function Button({ className, children, variant = 'primary', ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'primary' | 'outline' }) {
   const base = "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 h-9 px-4 py-2"
   const variants = {
     primary: "bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm",
     outline: "border border-slate-300 bg-white hover:bg-slate-50 text-slate-900"
   }
-  return <button className={`${base} ${(variants as any)[variant]} ${className || ''}`} {...props}>{children}</button>
+  return <button className={`${base} ${variants[variant]} ${className || ''}`} {...props}>{children}</button>
 }
 
 export function Badge({ className, variant = 'default', children }: { className?: string, variant?: 'default' | 'destructive' | 'secondary', children: React.ReactNode }) {

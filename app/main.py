@@ -1,7 +1,9 @@
 import csv
 import io
 import json
-from datetime import datetime, timezone
+import math
+import re
+from datetime import date, datetime, timezone
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,7 +13,7 @@ from app.config import settings
 from app.database import connection, initialize
 from app.schemas import ReviewRequest
 
-app = FastAPI(title="FINTECH AI API", version="0.3.0", description="Digital Surfers financial audit API")
+app = FastAPI(title="FinGuard AI API", version="0.3.0", description="Digital Surfers financial audit API")
 app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 @app.on_event("startup")
@@ -20,7 +22,7 @@ def startup() -> None:
 
 @app.get("/api/health", tags=["system"])
 def health() -> dict:
-    return {"status": "ok", "service": "fintech-ai-backend", "database": "configured"}
+    return {"status": "ok", "service": "finguard-ai-backend", "database": "configured"}
 
 
 def canonical_row(row: dict[str, str]) -> dict[str, str]:
@@ -42,25 +44,45 @@ async def upload(file: UploadFile = File(...)) -> dict:
     if len(content) > 10 * 1024 * 1024:
         raise HTTPException(413, "CSV exceeds the 10 MB limit")
     try:
-        reader = csv.DictReader(io.StringIO(content.decode("utf-8-sig")))
-        rows = [canonical_row(r) for r in reader]
+        reader = csv.DictReader(io.StringIO(content.decode("utf-8-sig")), strict=True)
+        rows = list(reader)
         headers = {" ".join((h or "").strip().lower().replace("_", " ").split()) for h in (reader.fieldnames or [])}
     except UnicodeDecodeError as exc:
         raise HTTPException(422, "CSV must be UTF-8 encoded") from exc
-    if not {"date", "description", "amount"}.issubset({"date" if h == "transaction date" else "amount" if h == "transaction amount" else h for h in headers}):
+    except csv.Error as exc:
+        raise HTTPException(422, "CSV has malformed quoting or rows") from exc
+    if not {"date", "description", "amount"}.issubset({"date" if h == "transaction date" else "amount" if h == "transaction amount" else "description" if h == "transaction description" else h for h in headers}):
         raise HTTPException(422, "CSV requires date, description, amount (or Transaction date, Description, Amount) columns")
     if not rows:
         raise HTTPException(422, "CSV contains no transaction rows")
     accepted, errors = [], []
-    for number, row in enumerate(rows, 2):
+    for number, raw_row in enumerate(rows, 2):
         try:
-            amount_text = row["amount"].replace(",", "").replace("KES", "").replace("USD", "").strip()
-            amount = float(amount_text)
-            if amount <= 0 or not row["date"] or not row["description"]:
-                raise ValueError("date, description, and a positive amount are required")
-            currency = "KES" if "KES" in row["amount"].upper() or "transaction date" in headers else "USD"
-            accepted.append((row["date"], row["description"], amount, currency, row["supplier"] or None, row["reference"] or None, number))
-        except (ValueError, KeyError) as exc:
+            if None in raw_row or any(value is None for value in raw_row.values()):
+                raise ValueError("CSV row has missing or extra columns")
+            row = canonical_row(raw_row)
+            raw_amount = row["amount"].strip()
+            embedded_currency = ""
+            match = re.fullmatch(r"(KES|USD)\s*(.+)|(.+?)\s*(KES|USD)", raw_amount, re.IGNORECASE)
+            if match:
+                embedded_currency = (match.group(1) or match.group(4)).upper()
+                raw_amount = match.group(2) or match.group(3)
+            amount = float(raw_amount.replace(",", "").strip())
+            if not math.isfinite(amount) or amount <= 0:
+                raise ValueError("amount must be a finite positive number")
+            if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", row["date"]):
+                raise ValueError("date must use YYYY-MM-DD")
+            parsed_date = date.fromisoformat(row["date"]).isoformat()
+            if not row["description"]:
+                raise ValueError("description is required")
+            explicit_currency = row["currency"].strip().upper()
+            if explicit_currency and not re.fullmatch(r"[A-Z]{3}", explicit_currency):
+                raise ValueError("currency must be a three-letter code")
+            if explicit_currency and embedded_currency and explicit_currency != embedded_currency:
+                raise ValueError("currency column conflicts with the amount's currency")
+            currency = explicit_currency or embedded_currency or ("KES" if "transaction date" in headers else "USD")
+            accepted.append((parsed_date, row["description"], amount, currency, row["supplier"] or None, row["reference"] or None, number))
+        except (ValueError, KeyError, OverflowError) as exc:
             errors.append(f"Row {number}: {exc}")
     if not accepted:
         raise HTTPException(422, detail={"message": "No valid transaction rows", "errors": errors[:50]})
@@ -72,9 +94,9 @@ async def upload(file: UploadFile = File(...)) -> dict:
         for tx in txs:
             supplier = (tx["supplier"] or "").strip().casefold()
             if tx["reference"]:
-                groups.setdefault(("reference", tx["reference"].strip().casefold()), []).append(tx)
+                groups.setdefault(("reference", tx["currency"], tx["reference"].strip().casefold()), []).append(tx)
             if supplier:
-                groups.setdefault(("supplier_amount_date", supplier, round(tx["amount"], 2), tx["date"]), []).append(tx)
+                groups.setdefault(("supplier_amount_date", supplier, tx["currency"], round(tx["amount"], 2), tx["date"]), []).append(tx)
         created = 0
         for key, group in groups.items():
             if len(group) < 2:
@@ -83,17 +105,29 @@ async def upload(file: UploadFile = File(...)) -> dict:
             for tx in group[1:]:
                 if db.execute("SELECT 1 FROM findings WHERE transaction_id=? AND finding_type=?", (tx["id"], finding_type)).fetchone():
                     continue
-                evidence = [f"Matching transaction references: {', '.join(str(x['id']) for x in group)}", f"Supplier: {tx['supplier'] or 'not supplied'}", f"Amount: {tx['currency']} {tx['amount']:.2f}", f"Date: {tx['date']}"]
+                reason = (f"Repeated payment reference: {tx['reference']}" if key[0] == "reference"
+                          else "Same supplier, currency, amount, and date")
+                evidence = [reason, f"Related transaction IDs: {', '.join(str(x['id']) for x in group)}", f"Supplier: {tx['supplier'] or 'not supplied'}", f"Amount: {tx['currency']} {tx['amount']:.2f}", f"Date: {tx['date']}"]
                 db.execute("INSERT INTO findings(transaction_id,finding_type,severity,evidence_json) VALUES(?,?,?,?)", (tx["id"], finding_type, "medium", json.dumps(evidence)))
                 created += 1
     return {"success": True, "message": "Transactions imported and rule checks completed", "total_records": len(rows), "successful": len(accepted), "rejected": len(rows)-len(accepted), "findings_detected": created, "errors": errors[:50]}
 
 @app.get("/api/transactions", tags=["transactions"])
-def list_transactions(limit: int = 100, offset: int = 0) -> dict:
-    limit = max(1, min(limit, 500)); offset = max(offset, 0)
+def list_transactions(limit: int = 100, offset: int = 0, q: str = "") -> dict:
+    limit = max(1, min(limit, 500))
+    offset = max(offset, 0)
+    search = q.strip().lower()
+    where = ""
+    parameters: tuple = ()
+    if search:
+        where = ("WHERE instr(lower(description), ?) > 0 "
+                 "OR instr(lower(COALESCE(supplier,'')), ?) > 0 "
+                 "OR instr(lower(COALESCE(reference,'')), ?) > 0")
+        parameters = (search, search, search)
     with connection() as db:
-        total = db.execute("SELECT COUNT(*) FROM transactions").fetchone()[0]
-        rows = db.execute("SELECT * FROM transactions ORDER BY id DESC LIMIT ? OFFSET ?", (limit, offset)).fetchall()
+        total = db.execute("SELECT COUNT(*) FROM transactions " + where, parameters).fetchone()[0]
+        rows = db.execute("SELECT * FROM transactions " + where + " ORDER BY id DESC LIMIT ? OFFSET ?",
+                          (*parameters, limit, offset)).fetchall()
     return {"items": [dict(r) for r in rows], "total": total, "limit": limit, "offset": offset}
 
 @app.get("/api/summary", tags=["transactions"])
@@ -101,8 +135,10 @@ def summary() -> dict:
     with connection() as db:
         tx = db.execute("SELECT COUNT(*) count, COALESCE(SUM(amount),0) total FROM transactions").fetchone()
         findings = db.execute("SELECT COUNT(*) FROM findings").fetchone()[0]
-        open_findings = db.execute("SELECT COUNT(*) FROM findings WHERE status='open'").fetchone()[0]
-    return {"transaction_count": tx["count"], "total_amount": tx["total"], "finding_count": findings, "open_finding_count": open_findings}
+        open_findings = db.execute("SELECT COUNT(*) FROM findings WHERE status IN ('open','needs_review')").fetchone()[0]
+        totals = db.execute("SELECT currency, COUNT(*) transaction_count, SUM(amount) total_amount FROM transactions GROUP BY currency ORDER BY currency").fetchall()
+    return {"transaction_count": tx["count"], "total_amount": tx["total"], "finding_count": findings,
+            "open_finding_count": open_findings, "totals_by_currency": [dict(row) for row in totals]}
 
 @app.get("/api/findings", tags=["findings"])
 def list_findings() -> list[dict]:

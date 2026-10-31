@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   AlertTriangle,
@@ -14,10 +15,11 @@ import {
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const pathname = usePathname();
 
   return (
     <aside
-      className={`flex shrink-0 flex-col bg-slate-900 text-slate-300 transition-[width] duration-200 ${
+      className={`sidebar flex shrink-0 flex-col bg-slate-900 text-slate-300 transition-[width] duration-200 ${
         collapsed ? "w-20" : "w-64"
       }`}
     >
@@ -32,7 +34,7 @@ export default function Sidebar() {
           <ShieldCheck className="h-6 w-6 shrink-0 text-emerald-500" />
           {!collapsed && (
             <span className="ml-2 font-bold tracking-wide text-white">
-              <span>FINTECH AI</span>
+              <span>FinGuard AI</span>
               <small className="ml-2 text-[10px] font-normal text-slate-400">Digital Surfers</small>
             </span>
           )}
@@ -55,6 +57,7 @@ export default function Sidebar() {
       <nav className="flex-1 space-y-2 px-3 py-6">
         <Link
           href="/dashboard"
+          aria-current={pathname === "/dashboard" ? "page" : undefined}
           title={collapsed ? "Dashboard" : undefined}
           className={`flex items-center gap-3 rounded-md py-2 hover:bg-slate-800 hover:text-white transition-colors ${
             collapsed ? "justify-center px-2" : "px-3"
@@ -65,6 +68,7 @@ export default function Sidebar() {
         </Link>
         <Link
           href="/upload"
+          aria-current={pathname === "/upload" ? "page" : undefined}
           title={collapsed ? "Import Data" : undefined}
           className={`flex items-center gap-3 rounded-md py-2 hover:bg-slate-800 hover:text-white transition-colors ${
             collapsed ? "justify-center px-2" : "px-3"
@@ -75,6 +79,7 @@ export default function Sidebar() {
         </Link>
         <Link
           href="/transactions"
+          aria-current={pathname === "/transactions" ? "page" : undefined}
           title={collapsed ? "Transactions" : undefined}
           className={`flex items-center gap-3 rounded-md py-2 hover:bg-slate-800 hover:text-white transition-colors ${
             collapsed ? "justify-center px-2" : "px-3"
@@ -85,6 +90,7 @@ export default function Sidebar() {
         </Link>
         <Link
           href="/anomalies"
+          aria-current={pathname === "/anomalies" ? "page" : undefined}
           title={collapsed ? "Anomalies & AI" : undefined}
           className={`flex items-center gap-3 rounded-md py-2 hover:bg-slate-800 hover:text-white transition-colors ${
             collapsed ? "justify-center px-2" : "px-3"

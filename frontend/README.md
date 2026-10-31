@@ -1,36 +1,29 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FinGuard AI frontend
 
-## Getting Started
+A small review workspace: import CSV records, inspect possible duplicate payments, request an optional AI explanation, and save a human review decision.
 
-First, run the development server:
+## Local setup
 
-```bash
+Start FastAPI from the repository root using the root README. In a second terminal:
+
+```powershell
+cd frontend
+npm ci
+Copy-Item .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Before starting, replace the example TEAM_ACCESS_PASSWORD in .env.local with your own team secret. Open http://localhost:3000 and sign in with username team and that password.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Browser API calls use the authenticated same-origin /api proxy. FINGUARD_BACKEND_URL configures the server-side backend address (default http://127.0.0.1:8000). Keep FastAPI and Ollama on loopback when sharing the frontend through the team tunnel.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Current scope
 
-## Learn More
+- Upload accepts the simple CSV format and the data-engine sample format.
+- Duplicate checks run on import. The separate statistical/category pipeline is not called by the API.
+- Amounts are shown per currency. Review decisions are confirmed, dismissed, and needs_review.
+- Transactions have pagination and search across all stored records.
+- Importing the same CSV again adds its records again.
+- AI failure does not block a human review.
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Run npm run lint and npm run build to check the frontend.

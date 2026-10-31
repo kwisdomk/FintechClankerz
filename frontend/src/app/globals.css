@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
-/* :root {
-  --background: #ffffff;
+:root {
+  --background: #f8fafc;
   --foreground: #171717;
-} */
+}
 
 @theme inline {
   --color-background: var(--background);
@@ -16,4 +16,17 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid #059669;
+  outline-offset: 3px;
+}
+nav a[aria-current="page"] { background: #1e3a38; color: #a7f3d0; }
+@media (max-width: 640px) {
+  .app-shell { flex-direction: column; }
+  .sidebar { width: 100%; }
+  .sidebar nav { display: flex; flex-wrap: wrap; gap: 4px; padding: 12px; }
+  .sidebar nav a { margin: 0; font-size: 12px; padding: 8px; }
+  .app-shell header { padding: 12px 16px; height: auto; min-height: 64px; flex-wrap: wrap; gap: 8px; }
 }

@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 
-const backend = process.env.AURA_BACKEND_URL || "http://127.0.0.1:8000";
+const backend = process.env.FINGUARD_BACKEND_URL || "http://127.0.0.1:8000";
 async function forward(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   const { path } = await context.params;
   const target = `${backend}/api/${path.map(encodeURIComponent).join("/")}${request.nextUrl.search}`;

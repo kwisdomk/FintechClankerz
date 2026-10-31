@@ -1,8 +1,10 @@
-# FINTECH AI Backend — Member 3: API & AI Integration
+# FinGuard AI
 
 FastAPI service connecting the auditor-facing API, SQLite persistence, the data engine, and Gemma inference. It is designed to expose **observed evidence** separately from AI-generated interpretation. Models do not query databases or perform financial actions.
 
 ## Run
+
+For the authenticated Next.js interface, follow [frontend setup](frontend/README.md) in a second terminal after starting this backend.
 
 ```powershell
 py -m venv .venv
@@ -22,8 +24,8 @@ uvicorn app.main:app --reload
 |---|---|---|
 | GET | `/api/health` | Service health |
 | POST | `/api/upload` | Import UTF-8 CSV (max 10 MB); supports simple headers and data-engine headers such as `Transaction date,Description,Amount,Supplier,Payment reference`. Reports invalid rows and creates deterministic possible-duplicate findings. |
-| GET | `/api/transactions` | Paginated records (`limit`, `offset`) |
-| GET | `/api/summary` | Transaction count, total amount, finding and open-finding counts |
+| GET | `/api/transactions` | Paginated records (`limit`, `offset`) and search (`q`) |
+| GET | `/api/summary` | Transaction count, totals by currency, finding and awaiting-review counts |
 | GET | `/api/findings` | Findings joined to their transaction details and observed evidence |
 | POST | `/api/findings/{id}/explain` | Ask configured Ollama model for an explanation; persist response; 503 if unavailable |
 | POST | `/api/findings/{id}/review` | Validate and persist `confirmed`, `dismissed`, or `needs_review` plus reviewer/notes and timestamp |
@@ -58,4 +60,6 @@ Expose only the Next.js frontend on port 3000 through Cloudflare Tunnel. The fro
 
 ## Security and limitations
 
-Credentials belong only in ignored `.env`; validate/limit uploaded files; never treat model output as financial truth. SQLite is the hackathon/local database; deployment hardening, authentication/authorization, migrations, rate limits, and hosted-provider policy remain follow-up work. CSV date parsing and finding payload shape should be settled with the data-engine owner.
+Credentials belong only in ignored `.env`; validate/limit uploaded files; never treat model output as financial truth. SQLite is the hackathon/local database; deployment hardening, authentication/authorization, migrations, rate limits, and hosted-provider policy remain follow-up work. Imports require valid YYYY-MM-DD dates and finite positive amounts. An explicit three-letter currency is preserved; simple files default to USD, and data-engine sample headers default to KES if no currency is supplied. Conflicting currency markers are rejected. Duplicate checks compare records within the same currency. Awaiting-review counts include both open and needs_review findings.
+
+The legacy combined `total_amount` field remains for compatibility. Use `totals_by_currency` for display; never add different currencies as one comparable financial total. Imports are additive, so uploading the same file again adds its rows again. Existing installations should keep their configured `DATABASE_URL` to preserve their records; the name change does not migrate existing databases.

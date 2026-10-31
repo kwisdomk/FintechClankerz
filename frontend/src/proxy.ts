@@ -8,7 +8,7 @@ export function proxy(request: NextRequest) {
   if (request.headers.get("authorization") === expected) return NextResponse.next();
   return new NextResponse("Authentication required.", {
     status: 401,
-    headers: { "WWW-Authenticate": 'Basic realm="Fintech AI team demo", charset="UTF-8"' },
+    headers: { "WWW-Authenticate": 'Basic realm="FinGuard AI team demo", charset="UTF-8"' },
   });
 }
 
