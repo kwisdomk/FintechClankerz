@@ -1,0 +1,21 @@
+date,description,amount,currency,supplier,reference
+2026-09-01,Office stationery purchase,145.25,USD,Demo Paper House,OFF-001
+2026-09-02,Monthly internet service,89.99,USD,Demo Fiber Network,OFF-002
+2026-09-03,Staff training workshop,1200.00,USD,Demo Skills Academy,OFF-003
+2026-09-04,Printer toner order,275.50,USD,Demo Print Supplies,OFF-004
+2026-09-05,Client meeting refreshments,42.80,USD,Demo Corner Cafe,OFF-005
+2026-09-06,Laptop procurement,2450.00,USD,Demo Byte Store,OFF-006
+2026-09-07,Courier delivery,18.75,USD,Demo Swift Courier,OFF-007
+2026-09-08,Accounting software subscription,199.00,USD,Demo Ledger Cloud,OFF-008
+2026-09-09,Office cleaning service,350.00,USD,Demo Clean Team,OFF-009
+2026-09-10,Conference registration,650.00,USD,Demo Events Group,OFF-010
+2026-09-11,Office furniture invoice,1800.00,USD,Demo Desk Works,OFF-011
+2026-09-11,Office furniture second entry,1800.00,USD,Demo Desk Works,OFF-011
+2026-09-12,Facilities maintenance invoice,480.00,USD,Demo Facility Care,OFF-013
+2026-09-12,Facilities maintenance separate reference,480.00,USD,Demo Facility Care,OFF-014
+2026-09-13,Annual security system upgrade,28750.00,USD,Demo Safe Systems,OFF-015
+2026-09-14,Taxi to customer site,34.60,USD,Demo City Rides,OFF-016
+2026-09-15,Cloud backup storage,75.00,USD,Demo Backup Vault,OFF-017
+2026-09-16,Team lunch,126.40,USD,Demo Green Kitchen,OFF-018
+2026-09-17,Legal document review,920.00,USD,Demo Legal Partners,OFF-019
+2026-09-18,Equipment insurance premium,1300.00,USD,Demo Cover Group,OFF-020

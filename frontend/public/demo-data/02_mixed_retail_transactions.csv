@@ -1,0 +1,21 @@
+date,description,amount,currency,supplier,reference
+2026-10-01,Fresh produce stock,325.40,USD,Demo Valley Farms,RET-001
+2026-10-01,Packaging cartons,84.00,USD,Demo Box Factory,RET-002
+2026-10-02,Warehouse rent,3200.00,USD,Demo Warehouse Estates,RET-003
+2026-10-03,Delivery van fuel,118.75,USD,Demo Fuel Stop,RET-004
+2026-10-03,Store electricity bill,275.20,USD,Demo Power Services,RET-005
+2026-10-04,Point of sale subscription,59.00,USD,Demo Checkout Cloud,RET-006
+2026-10-05,Imported inventory shipment,18950.00,USD,Demo Global Stock,RET-007
+2026-10-06,Social media promotion,450.00,USD,Demo Market Studio,RET-008
+2026-10-07,Store cleaning materials,67.35,USD,Demo Hygiene Supply,RET-009
+2026-10-08,Refrigeration repair,875.00,USD,Demo Cool Tech,RET-010
+2026-10-08,Refrigeration repair repeated entry,875.00,USD,Demo Cool Tech,RET-010
+2026-10-09,Weekend delivery service,210.00,USD,Demo Road Logistics,RET-012
+2026-10-09,Second weekend delivery same amount,210.00,USD,Demo Road Logistics,RET-013
+2026-10-10,Seasonal signage order,155.00,USD,Demo Sign Makers,RET-014
+2026-10-11,Large replacement freezer purchase,42750.00,USD,Demo Cold Equipment,RET-015
+2026-10-12,Bakery ingredients,390.80,USD,Demo Flour Mill,RET-016
+2026-10-13,Uniform replenishment,240.00,USD,Demo Workwear Shop,RET-017
+2026-10-14,Monthly pest control,95.00,USD,Demo Pest Care,RET-018
+2026-10-15,Evening delivery charge,27.50,USD,Demo Parcel Riders,RET-019
+2026-10-16,Fire extinguisher servicing,160.00,USD,Demo Fire Safety,RET-020
